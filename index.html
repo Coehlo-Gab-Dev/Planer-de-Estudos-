@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plano de Estudos Interativo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Estilos Gerais */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f4f7f6; /* Cor de fundo suave */
+            color: #333;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Container Principal do Planner */
+        .planner-container {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            width: 100%;
+            max-width: 1300px; /* Aumentado para acomodar nova coluna */
+            margin-top: 20px;
+        }
+
+        /* Cabeçalho do Planner */
+        .planner-header {
+            background-color: #0077b6; /* Azul escuro */
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+        }
+        .planner-header h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        /* Tabela do Planner */
+        .planner-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .planner-table th, .planner-table td {
+            border: 1px solid #e2e8f0; /* Cinza claro para bordas */
+            padding: 12px 15px;
+            text-align: left;
+            font-size: 0.95rem;
+            vertical-align: top;
+        }
+        .planner-table th {
+            background-color: #edf2f7; /* Cinza muito claro para cabeçalhos */
+            font-weight: 600;
+            color: #2d3748; /* Cinza escuro para texto do cabeçalho */
+        }
+
+        /* Estilos Específicos de Linha */
+        .today {
+            background-color: #fff3cd; /* Amarelo claro para HOJE */
+            font-weight: bold;
+        }
+        .weekend {
+            background-color: #f0f9ff; /* Azul muito claro para fins de semana */
+        }
+        .study-day {
+            background-color: #ffffff;
+        }
+        .review-day {
+            background-color: #e6fffa; /* Verde menta claro para revisão */
+        }
+        .exam-day {
+            background-color: #ffcdd2 !important; /* Vermelho claro para dia de avaliação */
+            font-weight: bold;
+            color: #c62828; /* Vermelho escuro para texto da avaliação */
+        }
+        .exam-day strong, .exam-day .emoji {
+            color: #c62828; /* Garante que o texto e emoji do dia do exame fiquem vermelhos */
+        }
+
+        /* Estilo para Tarefa Concluída */
+        .task-completed td:not(:first-child) { /* Não aplicar ao checkbox em si, mas ao resto da linha */
+            text-decoration: line-through;
+            color: #718096; /* Cinza mais claro */
+            opacity: 0.7;
+        }
+        .task-completed.today {
+             background-color: #fff3cd !important; /* Mantém a cor de hoje */
+        }
+         .task-completed.exam-day {
+            background-color: #ffcdd2 !important; /* Mantém a cor do dia do exame */
+        }
+        .task-completed .emoji {
+             opacity: 0.5;
+        }
+
+
+        /* Emojis e Colunas */
+        .emoji {
+            margin-right: 8px;
+        }
+        .status-column {
+            width: 80px; /* Largura para coluna de status/checkbox */
+            text-align: center !important;
+        }
+        .date-column {
+            min-width: 100px;
+        }
+        .day-column {
+            min-width: 100px;
+        }
+        .topic-column {
+            min-width: 250px;
+        }
+        .focus-column {
+            min-width: 300px;
+        }
+
+        /* Checkbox customizado (opcional, para melhor aparência) */
+        .task-checkbox {
+            cursor: pointer;
+            width: 1.3em;
+            height: 1.3em;
+            accent-color: #0077b6; /* Cor do checkbox quando marcado */
+        }
+
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .planner-header h1 {
+                font-size: 1.5rem;
+            }
+            .planner-table th, .planner-table td {
+                padding: 10px 8px; /* Ajustado padding */
+                font-size: 0.85rem;
+            }
+            .focus-column, .topic-column, .date-column, .day-column, .status-column {
+                min-width: auto;
+                width: auto !important; /* Reset width for mobile */
+            }
+            .planner-table thead {
+                display: none;
+            }
+            .planner-table, .planner-table tbody, .planner-table tr, .planner-table td {
+                display: block;
+                width: 100%;
+            }
+            .planner-table tr {
+                margin-bottom: 15px;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                overflow: hidden;
+                padding-top: 5px; /* Espaço para o checkbox no mobile */
+            }
+            .planner-table td {
+                text-align: left;
+                border: none;
+                border-bottom: 1px solid #e2e8f0;
+                position: relative;
+                padding-left: 45% !important; /* Espaço para o label */
+            }
+            .planner-table td:last-child {
+                border-bottom: none;
+            }
+            .planner-table td::before {
+                content: attr(data-label);
+                position: absolute;
+                left: 10px;
+                width: calc(45% - 20px); /* Ajustado para o padding-left */
+                padding-right: 10px;
+                font-weight: 600;
+                white-space: nowrap;
+                color: #2d3748;
+            }
+            .planner-table td.status-cell { /* Célula do checkbox no mobile */
+                padding-left: 10px !important; /* Remover padding especial do label */
+                height: 40px; /* Altura para alinhar checkbox */
+                display: flex;
+                align-items: center;
+            }
+             .planner-table td.status-cell::before {
+                content: "Status:"; /* Label para o checkbox no mobile */
+             }
+        }
+
+        /* Instruções */
+        .instructions {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e6f7ff;
+            border: 1px solid #91d5ff;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 0.9rem;
+            color: #0050b3;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="planner-container">
+        <div class="planner-header">
+            <h1>Plano de Estudos Interativo</h1>
+            <p class="text-sm opacity-90">Álgebra Linear e Geometria Analítica - Rumo à 2ª Avaliação</p>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="planner-table">
+                <thead>
+                    <tr>
+                        <th class="status-column">Status</th>
+                        <th class="date-column">Data</th>
+                        <th class="day-column">Dia da Semana</th>
+                        <th class="topic-column">Tópico/Atividade</th>
+                        <th class="focus-column">Foco do Estudo 🎯</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="today" data-task-id="1">
+                        <td class="status-cell" data-label="Status"><input type="checkbox" class="task-checkbox"></td>
+                        <td data-label="Data"><strong>20/05/2025 (HOJE)</strong></td>
+                        <td data-label="Dia">Terça-feira</td>
+                        <td data-label="Tópico"><span class="emoji">📚</span><strong>Sistema de Coordenadas; Estudo da Reta</strong></td>
+                        <td data-label="Foco">Entender os conceitos fundamentais, exemplos e iniciar os primeiros exercícios.</td>
+                    </tr>
+                    <tr class="study-day" data-task-id="2">
+                        <td class="status-cell" data-label="Status"><input type="checkbox" class="task-checkbox"></td>
+                        <td data-label="Data">21/05/2025</td>
+                        <td data-label="Dia">Quarta-feira</td>
+                        <td data-label="Tópico"><span class="emoji">🧐</span>Revisão e Prática: Reta</td>
+                        <td data-label="Foco">Revisar o conteúdo sobre Retas. Praticar exercícios (se houver, das Listas A e B relacionados ao tema).</td>
+                    </tr>
+                    <tr class="study-day" data-task-id="3">
+                        <td class="status-cell" data-label="Status"><input type="checkbox" class="task-checkbox"></td>
+                        <td data-label="Data">22/05/2025</td>
+                        <td data-label="Dia">Quinta-feira</td>
+                        <td data-label="Tópico"><span class="emoji">📚</span><strong>Estudo do Plano; Posições Relativas de Retas e Planos</strong></td>
+                        <td data-label="Foco">Aprender os conceitos de Planos e como Retas e Planos se relacionam no espaço. Iniciar exercícios.</td>
+                    </tr>
+                    <tr class="review-day" data-task-id="4">
+                        <td class="status-cell" data-label="Status"><input type="checkbox" class="task-checkbox"></td>
+                        <td data-label="Data">23/05/2025</td>
+                        <td data-label="Dia">Sexta-feira</td>
+                        <td data-label="Tópico"><span class="emoji">🧐</span>Revisão e Prática: Plano e Posições Relativas</td>
+                        <td data-label="Foco">Revisar os tópicos do dia anterior e praticar com mais exercícios.</td>
+                    </tr>
+                    <tr class="weekend" data-task-id="5">
+                        <td class="status-cell" data-label="Status"><input type="checkbox" class="task-checkbox"></td>
+                        <td data-label="Data">24/05/2025</td>
+                        <td data-label="Dia">Sábado</td>
+                        <td data-label="Tópico"><span class="emoji">💡</span>Recuperação e Revisão Semanal</td>
+                        <td data-label="Foco">Revisar todos os tópicos da semana (Reta, Plano, Posições). Focar nos exercícios mais desafiadores.</td>
+                    </tr>
+                    <tr class="weekend" data-task-id="6">
+                        <td class="status-cell" data-label="Status"><input type="checkbox" class="task-checkbox"></td>
+                        <td data-label="Data">25/05/2025</td>
+                        <td data-label="Dia">Domingo</td>
+                        <td data-label="Tópico"><span class="emoji">☕</span>Descanso / Revisão Leve</td>
+                        <td data-label="Foco">Dia para descansar ou fazer uma revisão mais leve dos conceitos, se sentir necessidade.</td>
+                    </tr>
+
+                    <tr><td colspan="5" style="background-color: #e0e0e0; height: 5px; padding:0; border:0;"></td></tr>
+
+                    <tr class="review-day" data-task-id="7">
+                        <td class="status-cell" data-label="Status"><input type="checkbox" class="task-checkbox"></td>
+                        <td data-label="Data">26/05/2025</td>
+                        <td data-label="Dia">Segunda-feira</td>
+                        <td data-label="Tópico"><span class="emoji">🧐</span>Revisão e Prática</td>
+                        <td data-label="Foco">Consolidar o entendimento sobre Reta e Plano, resolvendo problemas variados.</td>
+                    </tr>
+                    <tr class="study-day" data-task-id="8">
+                        <td class="status-cell" data-label="Status"><input type="checkbox" class="task-checkbox"></td>
+                        <td data-label="Data">27/05/2025</td>
+                        <td data-label="Dia">Terça-feira</td>
+                        <td data-label="Tópico"><span class="emoji">📐</span><strong>Perpendicularidade e ortogonalidade</strong></td>
+                        <td data-label="Foco">Entender as definições, propriedades e resolver exemplos. Começar os exercícios.</td>
+                    </tr>
+                    <tr class="review-day" data-task-id="9">
+                        <td class="status-cell" data-label="Status"><input type="checkbox" class="task-checkbox"></td>
+                        <td data-label="Data">28/05/2025</td>
+                        <td data-label="Dia">Quarta-feira</td>
+                        <td data-label="Tópico"><span class="emoji">🧐</span>Revisão e Prática: Perpendicularidade e Ortogonalidade</td>
+                        <td data-label="Foco">Revisar os conceitos de perpendicularidade e ortogonalidade, focando na aplicação em problemas.</td>
+                    </tr>
+                    <tr class="study-day" data-task-id="10">
+                        <td class="status-cell" data-label="Status"><input type="checkbox" class="task-checkbox"></td>
+                        <td data-label="Data">29/05/2025</td>
+                        <td data-label="Dia">Quinta-feira</td>
+                        <td data-label="Tópico"><span class="emoji">📏</span><strong>Medida Angular entre Retas, entre Reta e Plano, entre Planos</strong></td>
+                        <td data-label="Foco">Aprender a calcular ângulos entre diferentes elementos geométricos. Iniciar os exercícios.</td>
+                    </tr>
+                    <tr class="review-day" data-task-id="11">
+                        <td class="status-cell" data-label="Status"><input type="checkbox" class="task-checkbox"></td>
+                        <td data-label="Data">30/05/2025</td>
+                        <td data-label="Dia">Sexta-feira</td>
+                        <td data-label="Tópico"><span class="emoji">🧐</span>Revisão e Prática: Medidas Angulares</td>
+                        <td data-label="Foco">Revisar as fórmulas e métodos para cálculo de ângulos, praticando com exercícios.</td>
+                    </tr>
+                    <tr class="weekend" data-task-id="12">
+                        <td class="status-cell" data-label="Status"><input type="checkbox" class="task-checkbox"></td>
+                        <td data-label="Data">31/05/2025</td>
+                        <td data-label="Dia">Sábado</td>
+                        <td data-label="Tópico"><span class="emoji">💡</span>Recuperação e Revisão Semanal</td>
+                        <td data-label="Foco">Revisar os tópicos da semana (Perpendicularidade, Ortogonalidade, Ângulos). Focar em problemas práticos.</td>
+                    </tr>
+                     <tr class="weekend" data-task-id="13">
+                        <td class="status-cell" data-label="Status"><input type="checkbox" class="task-checkbox"></td>
+                        <td data-label="Data">01/06/2025</td>
+                        <td data-label="Dia">Domingo</td>
+                        <td data-label="Tópico"><span class="emoji">🔄</span><strong>Revisão Geral dos Tópicos para a 2ª Avaliação</strong></td>
+                        <td data-label="Foco">Revisar todos os conteúdos desde "Sistema de Coordenadas". Identificar pontos fracos.</td>
+                    </tr>
+
+                     <tr><td colspan="5" style="background-color: #e0e0e0; height: 5px; padding:0; border:0;"></td></tr>
+
+                    <tr class="review-day" data-task-id="14">
+                        <td class="status-cell" data-label="Status"><input type="checkbox" class="task-checkbox"></td>
+                        <td data-label="Data">02/06/2025</td>
+                        <td data-label="Dia">Segunda-feira</td>
+                        <td data-label="Tópico"><span class="emoji">✏️</span>Prática Intensiva com Exercícios</td>
+                        <td data-label="Foco">Resolver uma variedade de exercícios, simulando as condições da prova. Focar nas Listas A e B.</td>
+                    </tr>
+                    <tr class="study-day" data-task-id="15">
+                        <td class="status-cell" data-label="Status"><input type="checkbox" class="task-checkbox"></td>
+                        <td data-label="Data">03/06/2025</td>
+                        <td data-label="Dia">Terça-feira</td>
+                        <td data-label="Tópico"><span class="emoji">📍</span><strong>Distância entre Pontos, de Ponto a Reta, de Ponto a Plano, entre Retas</strong></td>
+                        <td data-label="Foco">Dominar o cálculo de distâncias. Este é o último tópico antes da avaliação. Praticar bastante.</td>
+                    </tr>
+                    <tr class="review-day" data-task-id="16">
+                        <td class="status-cell" data-label="Status"><input type="checkbox" class="task-checkbox"></td>
+                        <td data-label="Data">04/06/2025</td>
+                        <td data-label="Dia">Quarta-feira</td>
+                        <td data-label="Tópico"><span class="emoji">🌟</span><strong>Revisão Final e Simulado</strong></td>
+                        <td data-label="Foco">Fazer uma revisão completa de todos os tópicos da segunda avaliação. Tentar resolver problemas das listas A e B como um simulado.</td>
+                    </tr>
+                    <tr class="exam-day" data-task-id="17"> <td class="status-cell" data-label="Status"><input type="checkbox" class="task-checkbox" disabled></td> <td data-label="Data"><strong>05/06/2025</strong></td>
+                        <td data-label="Dia"><strong>Quinta-feira</strong></td>
+                        <td data-label="Tópico"><span class="emoji">🏆</span><strong>SEGUNDA AVALIAÇÃO ESCRITA</strong></td>
+                        <td data-label="Foco"><strong>Boa sorte na sua prova!</strong> ✨</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="instructions">
+        <p><strong>Como usar:</strong> Marque a caixa de seleção na primeira coluna para indicar que uma tarefa (dia de estudo) foi concluída.</p>
+        <p><strong>Como guardar como PNG:</strong> Use "Print Screen" (PrtScn) ou uma ferramenta de captura de ecrã.</p>
+    </div>
+
+    <script>
+        // Espera o DOM estar completamente carregado
+        document.addEventListener('DOMContentLoaded', function () {
+            // Seleciona todas as checkboxes de tarefa
+            const taskCheckboxes = document.querySelectorAll('.task-checkbox');
+
+            // Adiciona um ouvinte de evento para cada checkbox
+            taskCheckboxes.forEach(function(checkbox) {
+                checkbox.addEventListener('change', function() {
+                    // Encontra a linha (tr) pai da checkbox
+                    const taskRow = checkbox.closest('tr');
+
+                    // Se a checkbox estiver marcada, adiciona a classe 'task-completed'
+                    // Caso contrário, remove a classe
+                    if (checkbox.checked) {
+                        taskRow.classList.add('task-completed');
+                    } else {
+                        taskRow.classList.remove('task-completed');
+                    }
+                    // Para persistência (ex: localStorage), você adicionaria o código aqui
+                    // Ex: saveTaskStatus(taskRow.dataset.taskId, checkbox.checked);
+                });
+            });
+
+            // Opcional: Carregar status salvos ao iniciar (se implementar persistência)
+            // loadTaskStatuses();
+        });
+
+        /*
+        // Exemplo de funções para persistência com localStorage (NÃO ATIVADO POR PADRÃO)
+        function saveTaskStatus(taskId, isCompleted) {
+            if (taskId) { // Só salva se houver um taskId
+                localStorage.setItem('task_' + taskId, isCompleted);
+            }
+        }
+
+        function loadTaskStatuses() {
+            const taskCheckboxes = document.querySelectorAll('.task-checkbox');
+            taskCheckboxes.forEach(function(checkbox) {
+                const taskRow = checkbox.closest('tr');
+                const taskId = taskRow.dataset.taskId;
+                if (taskId) {
+                    const isCompleted = localStorage.getItem('task_' + taskId);
+                    if (isCompleted === 'true') {
+                        checkbox.checked = true;
+                        taskRow.classList.add('task-completed');
+                    } else if (isCompleted === 'false') { // Explicitamente falso
+                        checkbox.checked = false;
+                        taskRow.classList.remove('task-completed');
+                    }
+                }
+            });
+        }
+
+        // Para ativar o localStorage, descomente a chamada loadTaskStatuses() no DOMContentLoaded
+        // e a chamada saveTaskStatus() no evento 'change' do checkbox.
+        */
+    </script>
+
+</body>
+</html>
